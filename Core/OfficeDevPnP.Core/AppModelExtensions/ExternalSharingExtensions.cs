@@ -24,11 +24,11 @@ namespace Microsoft.SharePoint.Client
     {
         /// <summary>
         /// Can be used to get needed people picker search result value for given email account. 
+        /// See <a href="https://msdn.microsoft.com/en-us/library/office/jj179690.aspx">MSDN</a>
         /// </summary>
         /// <param name="web">Web for the context used for people picker search</param>
         /// <param name="emailAddress">Email address to be used as the query parameter. Should be pointing to unique person which is then searched using people picker capability programatically.</param>
         /// <returns>Resolves people picker value which can be used for sharing objects in the SharePoint site</returns>
-        /// <see cref="https://msdn.microsoft.com/en-us/library/office/jj179690.aspx"/>
         public static string ResolvePeoplePickerValueForEmail(this Web web, string emailAddress)
         {
             ClientPeoplePickerQueryParameters param = new ClientPeoplePickerQueryParameters();
@@ -47,19 +47,19 @@ namespace Microsoft.SharePoint.Client
 
             // Resolve people picker value based on email
             var ret = ClientPeoplePickerWebServiceInterface.ClientPeoplePickerResolveUser(web.Context, param);
-            web.Context.ExecuteQuery();
+            web.Context.ExecuteQueryRetry();
 
             // Return people picker return value in right format
             return string.Format("[{0}]", ret.Value);
         }
         /// <summary>
         /// Creates anonymous link to given document.
+        /// See <a href="https://msdn.microsoft.com/en-us/library/office/microsoft.sharepoint.client.web.createanonymouslink.aspx">MSDN</a>
         /// </summary>
         /// <param name="web">Web for the context used for people picker search</param>
         /// <param name="urlToDocument">Full URL to the file which is shared</param>
         /// <param name="shareOption">Type of the link to be created - View or Edit</param>
         /// <returns>Anonymous URL to the file as string</returns>
-        /// <see cref="https://msdn.microsoft.com/en-us/library/office/microsoft.sharepoint.client.web.createanonymouslink.aspx"/>
         public static string CreateAnonymousLinkForDocument(this Web web, string urlToDocument, ExternalSharingDocumentOption shareOption)
         {
             bool isEditLink = true;
@@ -75,7 +75,7 @@ namespace Microsoft.SharePoint.Client
                     break;
             }
             ClientResult<string> result = Microsoft.SharePoint.Client.Web.CreateAnonymousLink(web.Context, urlToDocument, isEditLink);
-            web.Context.ExecuteQuery();
+            web.Context.ExecuteQueryRetry();
 
             // return anonymous link to caller
             return result.Value;
@@ -83,13 +83,13 @@ namespace Microsoft.SharePoint.Client
 
         /// <summary>
         /// Creates anonymous link to the given document with automatic expiration time.
+        /// See <a href="https://msdn.microsoft.com/en-us/library/office/microsoft.sharepoint.client.web.createanonymouslinkwithexpiration.aspx">MSDN</a>
         /// </summary>
         /// <param name="web">Web for the context used for people picker search</param>
         /// <param name="urlToDocument">Full URL to the file which is shared</param>
         /// <param name="shareOption">Type of the link to be created - View or Edit</param>
         /// <param name="expireTime">Date time for link expiration - will be converted to ISO 8601 format automatically</param>
         /// <returns>Anonymous URL to the file as string</returns>
-        /// <see cref="https://msdn.microsoft.com/en-us/library/office/microsoft.sharepoint.client.web.createanonymouslinkwithexpiration.aspx"/>
         public static string CreateAnonymousLinkWithExpirationForDocument(this Web web, string urlToDocument, ExternalSharingDocumentOption shareOption, DateTime expireTime)
         {
             // If null given as expiration, there will not be automatic expiration time
@@ -116,7 +116,7 @@ namespace Microsoft.SharePoint.Client
             ClientResult<string> result =
                             Microsoft.SharePoint.Client.Web.CreateAnonymousLinkWithExpiration(
                                 web.Context, urlToDocument, isEditLink, expirationTimeAsString);
-            web.Context.ExecuteQuery();
+            web.Context.ExecuteQueryRetry();
 
             // Return anonymous link to caller
             return result.Value;
@@ -179,7 +179,7 @@ namespace Microsoft.SharePoint.Client
                                                         emailBody);
 
             web.Context.Load(result);
-            web.Context.ExecuteQuery();
+            web.Context.ExecuteQueryRetry();
             return result;
         }
 
@@ -192,7 +192,7 @@ namespace Microsoft.SharePoint.Client
         {
             SharingResult result = Microsoft.SharePoint.Client.Web.UnshareObject(web.Context, urlToDocument);
             web.Context.Load(result);
-            web.Context.ExecuteQuery();
+            web.Context.ExecuteQueryRetry();
 
             // Return the results
             return result;
@@ -213,7 +213,7 @@ namespace Microsoft.SharePoint.Client
             web.Context.Load(info);
             web.Context.Load(info.ObjectSharingInformation);
             web.Context.Load(info.ObjectSharingInformation.SharedWithUsersCollection);
-            web.Context.ExecuteQuery();
+            web.Context.ExecuteQueryRetry();
 
             return info;
         }
@@ -225,12 +225,12 @@ namespace Microsoft.SharePoint.Client
         /// <param name="useSimplifiedPolicies"></param>
         /// <returns></returns>
         public static ObjectSharingSettings GetObjectSharingSettingsForSite(this Web web, bool useSimplifiedPolicies = true)
-        { 
+        {
             // Ensure that URL exists
             if (!web.IsObjectPropertyInstantiated("Url"))
             {
                 web.Context.Load(web, w => w.Url);
-                web.Context.ExecuteQuery();
+                web.Context.ExecuteQueryRetry();
             }
 
             ObjectSharingSettings info =
@@ -238,7 +238,7 @@ namespace Microsoft.SharePoint.Client
             web.Context.Load(info);
             web.Context.Load(info.ObjectSharingInformation);
             web.Context.Load(info.ObjectSharingInformation.SharedWithUsersCollection);
-            web.Context.ExecuteQuery();
+            web.Context.ExecuteQueryRetry();
 
             return info;
         }
@@ -253,8 +253,8 @@ namespace Microsoft.SharePoint.Client
         /// <param name="sendEmail">Should we send email for the given address.</param>
         /// <param name="emailBody">Text to be added on share email sent to receiver.</param>
         /// <returns></returns>
-        public static SharingResult ShareSite(this Web web, string email, 
-                                                ExternalSharingSiteOption shareOption, bool sendEmail = true, 
+        public static SharingResult ShareSite(this Web web, string email,
+                                                ExternalSharingSiteOption shareOption, bool sendEmail = true,
                                                 string emailBody = "Site shared for you.")
         {
             // Solve people picker value for email address
@@ -273,7 +273,7 @@ namespace Microsoft.SharePoint.Client
         /// <param name="sendEmail">Should we send email for the given address.</param>
         /// <param name="emailBody">Text to be added on share email sent to receiver.</param>
         /// <returns></returns>
-        public static SharingResult ShareSiteWithPeoplePickerValue(this Web web, string peoplePickerInput, 
+        public static SharingResult ShareSiteWithPeoplePickerValue(this Web web, string peoplePickerInput,
                                                                     ExternalSharingSiteOption shareOption,
                                                                     bool sendEmail = true, string emailBody = "Site shared for you.")
         {
@@ -285,7 +285,7 @@ namespace Microsoft.SharePoint.Client
             if (!web.IsObjectPropertyInstantiated("Url"))
             {
                 web.Context.Load(web, w => w.Url);
-                web.Context.ExecuteQuery();
+                web.Context.ExecuteQueryRetry();
             }
 
             // Set default settings for site sharing
@@ -297,7 +297,7 @@ namespace Microsoft.SharePoint.Client
                                                         sendEmail, includedAnonymousLinkInEmail, null,
                                                         emailBody);
             web.Context.Load(result);
-            web.Context.ExecuteQuery();
+            web.Context.ExecuteQueryRetry();
             return result;
         }
 
@@ -327,7 +327,7 @@ namespace Microsoft.SharePoint.Client
             }
             // Load right group
             web.Context.Load(group);
-            web.Context.ExecuteQuery();
+            web.Context.ExecuteQueryRetry();
             // Return group ID
             return group.Id;
         }

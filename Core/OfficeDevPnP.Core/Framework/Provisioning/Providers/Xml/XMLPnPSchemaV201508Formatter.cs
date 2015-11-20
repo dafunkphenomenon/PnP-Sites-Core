@@ -782,7 +782,7 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.Providers.Xml
             #region Composed Looks
 
             // Translate ComposedLook, if any
-            if (template.ComposedLook != null)
+            if (template.ComposedLook != null && !template.ComposedLook.Equals(Model.ComposedLook.Empty))
             {
                 result.ComposedLook = new V201508.ComposedLook
                 {
@@ -1666,7 +1666,7 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.Providers.Xml
 
             if (source.SearchSettings != null)
             {
-                result.SearchSettings = source.SearchSettings.ToString();
+                result.SearchSettings = source.SearchSettings.OuterXml;
             }
 
             #endregion
@@ -1693,7 +1693,7 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.Providers.Xml
                               LanguageCode = awt.LanguageCodeSpecified ? awt.LanguageCode : 1033,
                               TemplateName = awt.TemplateName,
                           }) : null,
-                    source.Publishing.PageLayouts != null && source.Publishing.PageLayouts.PageLayout.Length > 0 ?
+                    source.Publishing.PageLayouts != null && source.Publishing.PageLayouts.PageLayout != null && source.Publishing.PageLayouts.PageLayout.Length > 0 ?
                         (from pl in source.Publishing.PageLayouts.PageLayout
                          select new Model.PageLayout
                          {
@@ -2112,7 +2112,7 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.Providers.Xml
 
         public static V201508.ObjectSecurity FromTemplateToSchemaObjectSecurityV201508(this Model.ObjectSecurity objectSecurity)
         {
-            return ((objectSecurity != null) ?
+            return ((objectSecurity != null && (objectSecurity.ClearSubscopes == true || objectSecurity.CopyRoleAssignments == true || objectSecurity.RoleAssignments.Count > 0)) ?
                 new V201508.ObjectSecurity
                 {
                     BreakRoleInheritance = new V201508.ObjectSecurityBreakRoleInheritance
